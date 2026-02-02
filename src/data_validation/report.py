@@ -23,6 +23,8 @@ def _build_validation_plan(results: Dict[str, object]) -> List[str]:
     checks = results.get("checks", [])
     lookup = {c["name"]: c for c in checks}
     plan = []
+    schema = results.get("schema", {})
+    exclude_fields = schema.get("exclude_fields", [])
 
     for key in ["train_missing_values", "test_missing_values"]:
         if key in lookup:
@@ -55,6 +57,8 @@ def _build_validation_plan(results: Dict[str, object]) -> List[str]:
             plan.append(
                 f"Cross-field consistency ({key}: sample_size={sample_size})."
             )
+        elif any(field in exclude_fields for field in ["oldbalanceOrg", "newbalanceOrig", "oldbalanceDest", "newbalanceDest"]):
+            plan.append("Cross-field consistency (balance checks skipped - fields excluded from model).")
 
     plan.append("Drift checks: numeric KS-stat + categorical PSI.")
     plan.append("Target class distribution report for imbalance tracking.")
@@ -67,6 +71,8 @@ def _model_impact_actions(results: Dict[str, object]) -> List[Dict[str, str]]:
     checks = {c["name"]: c for c in results.get("checks", [])}
     class_dist = results.get("class_distribution", {}).get("counts", {})
     drift = results.get("drift", {})
+    schema = results.get("schema", {})
+    exclude_fields = schema.get("exclude_fields", [])
 
     if "amount_spikes" in checks:
         spike_values = checks["amount_spikes"].get("details", {}).get("spike_values", [])
@@ -89,7 +95,7 @@ def _model_impact_actions(results: Dict[str, object]) -> List[Dict[str, str]]:
         )
 
     for key in ["balance_error_orig", "balance_error_dest"]:
-        if key in checks:
+        if key in checks and not any(field in exclude_fields for field in ["oldbalanceOrg", "newbalanceOrig", "oldbalanceDest", "newbalanceDest"]):
             count = checks[key].get("count", 0)
             actions.append(
                 {
@@ -179,6 +185,9 @@ def write_report(results: Dict[str, object], out_dir: str) -> Dict[str, str]:
         schema = results.get("schema", {})
         f.write(f"- Allowed types: {schema.get('allowed_type_values')}\n")
         f.write(f"- Target values: {schema.get('target_values')}\n")
+        exclude_fields = schema.get('exclude_fields', [])
+        if exclude_fields:
+            f.write(f"- Excluded fields (not used in model): {exclude_fields}\n")
         thresholds = schema.get("thresholds", {})
         f.write(f"- Thresholds: {thresholds}\n\n")
 

@@ -35,6 +35,7 @@ class ValidationSchema:
     id_col: str = "id"
     target_col: str = "urgency_level"
     thresholds: RuleThresholds = field(default_factory=RuleThresholds)
+    exclude_fields: List[str] = field(default_factory=list)
     mode: str = "warn"
 
     def as_dict(self) -> Dict[str, object]:
@@ -69,6 +70,9 @@ def infer_schema(train_df, test_df, mode: str = "warn") -> ValidationSchema:
 
     dtypes = {col: str(train_df[col].dtype) for col in train_df.columns}
 
+    # Fields excluded from model training (balance fields)
+    exclude_fields = ["oldbalanceOrg", "newbalanceOrig", "oldbalanceDest", "newbalanceDest"]
+
     return ValidationSchema(
         train_columns=train_cols,
         test_columns=test_cols,
@@ -76,6 +80,7 @@ def infer_schema(train_df, test_df, mode: str = "warn") -> ValidationSchema:
         allowed_type_values=sorted(allowed_types),
         expected_type_values=DEFAULT_ALLOWED_TYPES.copy(),
         thresholds=thresholds,
+        exclude_fields=exclude_fields,
         mode=mode,
     )
 

@@ -1,6 +1,6 @@
 /runs
 *.csv
-*.zip
+*.zip*
 *.joblib
 __pycache__/
 .DS_Store

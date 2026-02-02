@@ -480,10 +480,8 @@ def run_validations(
     cross_sample = _sample_df(
         train_df, schema.thresholds.check_sample_size, schema.thresholds.random_state
     )
-    if all(
-        col in cross_sample.columns
-        for col in ["oldbalanceOrg", "newbalanceOrig", "oldbalanceDest", "newbalanceDest", "amount"]
-    ):
+    balance_cols = ["oldbalanceOrg", "newbalanceOrig", "oldbalanceDest", "newbalanceDest", "amount"]
+    if all(col in cross_sample.columns for col in balance_cols) and not any(col in schema.exclude_fields for col in balance_cols):
         orig_delta = cross_sample["oldbalanceOrg"] - cross_sample["newbalanceOrig"]
         dest_delta = cross_sample["newbalanceDest"] - cross_sample["oldbalanceDest"]
         expected_orig, expected_dest = _expected_balance_deltas(cross_sample)

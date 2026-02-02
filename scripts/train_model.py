@@ -139,10 +139,6 @@ def main() -> int:
     numeric_cols = [
         "step",
         "amount",
-        "oldbalanceOrg",
-        "newbalanceOrig",
-        "oldbalanceDest",
-        "newbalanceDest",
         "log1p_amount",
         "orig_delta",
         "dest_delta",
